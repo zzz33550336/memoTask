@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!78 &1
+TagManager:
+  serializedVersion: 2
+  tags: []
+  layers:
+  - Default
+  - TransparentFX
+  - Ignore Raycast
+  - 
+  - Water
+  - UI
+  - 
+  - 
+  - 
+  - Ground
+  - Building
+  - 
+  - Monster
+  - 
+  - Arrow
+  - Player
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  m_SortingLayers:
+  - name: Default
+    uniqueID: 0
+    locked: 0
+  - name: background
+    uniqueID: 1634773597
+    locked: 0
+  - name: cloud
+    uniqueID: 596193037
+    locked: 0
+  - name: buildings
+    uniqueID: 3348312655
+    locked: 0
+  - name: objects
+    uniqueID: 2528742019
+    locked: 0
+  - name: monsters
+    uniqueID: 2157613043
+    locked: 0
+  - name: player
+    uniqueID: 708193823
+    locked: 0
+  - name: UI
+    uniqueID: 3232281017
+    locked: 0
