@@ -10,7 +10,7 @@ public class HPUIManager : MonoBehaviour
     public Sprite HP0;
 
     private int currentHP; 
-    private int maxHP; 
+    private int maxHP=3; 
 
     void Start()
     {
@@ -20,6 +20,7 @@ public class HPUIManager : MonoBehaviour
 
     public void SetHP(int newHP)
     {
+        Debug.Log("SetHP called with newHP: " + newHP);
         currentHP = Mathf.Clamp(newHP, 0, maxHP); 
         UpdateHPUI();
     }

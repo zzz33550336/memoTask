@@ -2,12 +2,14 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-
+using UnityEngine.UI;
+using UnityEngine.Audio;
+using TMPro;
+using UnityEngine.UI;
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
-    
-    //[Header("Game State")]
+
     public enum GameState
     {
         Menu,
@@ -16,163 +18,201 @@ public class GameManager : MonoBehaviour
         GameOver,
         Victory
     }
-    
-    [SerializeField] private GameState currentState = GameState.Menu;
-    public GameState CurrentState => currentState;
-    
+
+    [Header("UI References")]
+    public GameObject PauseMenuUI;
+    public GameObject gameOverUI;
+    public GameObject victoryUI;
+    public TextMeshProUGUI resultText;
+
+    [Header("Settings")]
+    public string levelSelectScene = "LevelSelection";
+    public float delayBeforeLoad = 2f;
+
     [Header("Game Objects")]
     [SerializeField] private PlayerController player;
-    [SerializeField] private Transform MonsterParent; 
+    [SerializeField] private GameObject monsterParent;
+    /*
     [SerializeField] private GameObject pauseMenuUI;
     [SerializeField] private GameObject gameOverUI;
     [SerializeField] private GameObject victoryUI;
+    */
+    private int enemyCount; 
+    private bool isLevelComplete; // 防止重复触发胜利条件
+    private int currentLevelIndex;
+    private GameState currentState = GameState.Menu;
+
+    public GameState CurrentState => currentState;
+
+    private int totalMonsters = 0;
+    private int defeatedMonsters = 0;
+    public int score = 0;
+    public void AddScore(int score)
+    {
+        CommonTools.addScore(score);
+    }
     
-    [Header("Game Settings")]
-    //[SerializeField] private float restartDelay = 2f;
-    
-    private int totalSlimes = 0;
-    private int defeatedSlimes = 0;
-    
+
     void Awake()
     {
-        // 确保只有一个GameManager实例
         if (Instance == null)
         {
             Instance = this;
-            DontDestroyOnLoad(gameObject);
+            //DontDestroyOnLoad(gameObject);
         }
         else
         {
             Destroy(gameObject);
-            return;
         }
     }
-    
+
     void Start()
     {
-        // 初始化游戏
         InitializeGame();
     }
-    
+
     void Update()
     {
         HandleInput();
-        
-        // 检查游戏状态
-        switch (currentState)
+        if (currentState == GameState.Playing)
         {
-            case GameState.Playing:
-                CheckGameConditions();
-                break;
+            CheckGameConditions();
         }
     }
-    
+
+    void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        if (scene.name.StartsWith("level"))
+        {
+            currentLevelIndex = int.Parse(scene.name.Replace("level", ""));
+            InitializeLevel();
+        }
+    }
+
+    private void OnEnable()
+    {
+        SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    private void OnDisable()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+
     private void InitializeGame()
     {
-        // 初始化游戏状态
-        currentState = GameState.Menu;
-        
-        // 隐藏所有UI
-        if (pauseMenuUI) pauseMenuUI.SetActive(false);
+        isLevelComplete = false;
+        if (PauseMenuUI) PauseMenuUI.SetActive(false);
         if (gameOverUI) gameOverUI.SetActive(false);
         if (victoryUI) victoryUI.SetActive(false);
-        
-        // monster total
-        if (MonsterParent != null)
+        //if (PauseMenuUI) PauseMenuUI.SetActive(false);
+        /*
+        enemyCount = GameObject.FindGameObjectsWithTag("Monster").Length;
+        Debug.Log($"当前怪物数: {enemyCount}");
+*/
+        if (monsterParent != null)
         {
-            totalSlimes = MonsterParent.childCount;
-            Debug.Log("Total slimes in scene: " + totalSlimes);
+            totalMonsters = monsterParent.transform.childCount;
+            Debug.Log($"Total monsters in scene: {totalMonsters}");
+            enemyCount = totalMonsters;
         }
-        
-        // 开始游戏
+        else
+        {
+            Debug.LogError("Monster parent not assigned!");
+        }
         StartGame();
     }
-    
+
+    private void InitializeLevel()
+    {
+        Debug.Log($"Initializing level {currentLevelIndex}");
+    }
+
     public void StartGame()
     {
         currentState = GameState.Playing;
         Time.timeScale = 1f;
         Debug.Log("Game started");
+
+        if (resultText != null)
+            resultText.text = "";
     }
-    
+
     private void HandleInput()
     {
-        // 按ESC键暂停/取消暂停
         if (Input.GetKeyDown(KeyCode.Escape))
         {
             if (currentState == GameState.Playing)
             {
+                currentState = GameState.Paused;
                 PauseGame();
             }
             else if (currentState == GameState.Paused)
             {
+                currentState = GameState.Playing;
                 ResumeGame();
             }
         }
     }
-    
+
     private void CheckGameConditions()
     {
-        // 检查玩家是否死亡
         if (player != null && player.IsDead())
         {
+            currentState = GameState.GameOver;
             GameOver();
             return;
         }
-        
-        // check all monsters
-        if (MonsterParent != null)
+
+        if (monsterParent != null)
         {
-            int currentSlimes = 0;
-            foreach (Transform child in MonsterParent)
+            if (defeatedMonsters >= totalMonsters)
             {
-                if (child.gameObject.activeInHierarchy)
-                {
-                    currentSlimes++;
-                }
-            }
-            
-            // 如果史莱姆数量为0，玩家获胜
-            if (currentSlimes <= 0)
-            {
+                //AudioTool.PlaySound("victory");
+                currentState = GameState.Victory;
                 Victory();
             }
         }
     }
-    
+
     public void PauseGame()
     {
         currentState = GameState.Paused;
         Time.timeScale = 0f;
-        if (pauseMenuUI) pauseMenuUI.SetActive(true);
+        if (PauseMenuUI) PauseMenuUI.SetActive(true);
         Debug.Log("Game paused");
     }
-    
+
     public void ResumeGame()
     {
         currentState = GameState.Playing;
         Time.timeScale = 1f;
-        if (pauseMenuUI) pauseMenuUI.SetActive(false);
+        if (PauseMenuUI) PauseMenuUI.SetActive(false);
         Debug.Log("Game resumed");
     }
-    
+
     public void GameOver()
     {
         currentState = GameState.GameOver;
-        Time.timeScale = 0f;
+        //Time.timeScale = 0f;
         if (gameOverUI) gameOverUI.SetActive(true);
         Debug.Log("Game over");
     }
-    
+
     public void Victory()
     {
-        currentState = GameState.Victory;
-        Time.timeScale = 0f;
-        if (victoryUI) victoryUI.SetActive(true);
-        Debug.Log("Victory!");
-    }
+        //if (isLevelComplete) return; 
     
-    // 通过按钮调用的暂停方法
+        currentState = GameState.Victory;
+        isLevelComplete = true;
+
+        if (victoryUI) victoryUI.SetActive(true);
+        if(resultText)resultText.text = "Your score: " + score;
+        else Debug.LogError("Result text not assigned!");
+        Debug.Log("Victory!");
+
+    }
+
     public void TogglePause()
     {
         if (currentState == GameState.Playing)
@@ -184,43 +224,77 @@ public class GameManager : MonoBehaviour
             ResumeGame();
         }
     }
-    
-    // 重新开始游戏
+
     public void RestartGame()
     {
+        
         currentState = GameState.Playing;
         Time.timeScale = 1f;
-        
-        // 重新加载当前场景
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         Debug.Log("Game restarted");
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex, LoadSceneMode.Single);
     }
-    
-    // 返回主菜单
+
     public void ReturnToMenu()
     {
-        currentState = GameState.Menu;
-        Time.timeScale = 1f;
-        // 这里可以加载主菜单场景
-        // SceneManager.LoadScene("MainMenu");
         Debug.Log("Return to menu");
+        Time.timeScale = 1f;
+
+        SceneManager.LoadScene(levelSelectScene, LoadSceneMode.Single);
+        SceneManager.UnloadSceneAsync(SceneManager.GetActiveScene().buildIndex);
     }
-    
-    // 退出游戏
+
     public void QuitGame()
     {
         Debug.Log("Quitting game");
-        #if UNITY_EDITOR
+#if UNITY_EDITOR
         UnityEditor.EditorApplication.isPlaying = false;
-        #else
+#else
         Application.Quit();
-        #endif
+#endif
     }
-    
-    // 史莱姆被击败时调用
-    public void OnSlimeDefeated()
+
+    public void LoadNextLevel()
     {
-        defeatedSlimes++;
-        Debug.Log("Slime defeated. Total defeated: " + defeatedSlimes);
+        int nextLevelIndex =2;
+        string nextLevelName = $"level{nextLevelIndex}";
+        SceneManager.LoadScene(nextLevelName);
+        Debug.Log($"Loading next level: {nextLevelName}");
+    }
+
+    public void ReturnToSelect()
+    {
+        SceneManager.LoadScene(levelSelectScene);
+        Debug.Log("Returning to level selection");
+    }
+
+    // 当敌人被击败时调用
+    public void OnEnemyDefeated()
+    {
+        enemyCount--;
+        //defeatedMonsters++;
+
+        if (enemyCount <= 0 && !isLevelComplete)
+        {
+            isLevelComplete = true;
+            Victory();
+           // StartCoroutine(ShowResult(true));
+        }
+    }
+
+   private IEnumerator ShowResult(bool isVictory)
+    {
+       // if (resultText)
+           // resultText.text = isVictory ? "胜利！" : "失败！";
+
+        //if (resultText)
+           // resultText.text = isVictory ? "胜利！" : "失败！";
+
+        
+        yield return new WaitForSeconds(delayBeforeLoad);
+
+        if (isVictory)
+        {
+            
+        }
     }
 }

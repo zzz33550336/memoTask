@@ -15,7 +15,7 @@ public class CloudsMove : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        CommonTools.CheckScreenWrap(transform, rb);
+        CommonTools.CheckScreenWrap(transform, rb,true);
         rb.velocity = new Vector2(-moveSpeed, rb.velocity.y);
     }
 }

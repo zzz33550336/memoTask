@@ -5,6 +5,6 @@ public class LevelController : MonoBehaviour
 {
     public void ReturnToLevelSelection()
     {
-        SceneManager.LoadScene("LevelSelection");
+        SceneManager.LoadScene("LevelSelection",LoadSceneMode.Single);
     }
 }

@@ -75,7 +75,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: -2137354253
-  m_SortingLayer: 4
+  m_SortingLayer: 5
   m_SortingOrder: 0
   m_Sprite: {fileID: 21300000, guid: 1731bc0a72beb214b9ed9fe8b0762602, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -118,7 +118,7 @@ BoxCollider2D:
   m_GameObject: {fileID: 3051782228558032405}
   m_Enabled: 1
   m_Density: 1
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 6200000, guid: e3408bfbac5f5b643985f90798817353, type: 2}
   m_IncludeLayers:
     serializedVersion: 2
     m_Bits: 0
@@ -128,10 +128,10 @@ BoxCollider2D:
   m_LayerOverridePriority: 0
   m_ForceSendLayers:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 49152
   m_ForceReceiveLayers:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 17920
   m_ContactCaptureLayers:
     serializedVersion: 2
     m_Bits: 4294967295
@@ -193,9 +193,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a7316f2d91a79bc4096c5e88c2a7a85e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  buildLayer:
+  checkDistance: 0.5
+  buildingLayer:
+    serializedVersion: 2
+    m_Bits: 5632
+  groundLayer:
     serializedVersion: 2
     m_Bits: 1536
-  maxHealth: 3
+  playerLayer:
+    serializedVersion: 2
+    m_Bits: 32768
+  coin: {fileID: 2749623313785678961, guid: 9a7f419fc3e11fd43867c6e3697718a2, type: 3}
+  maxHealth: 1
+  isDead: 0
+  moveInterval: 2
   moveSpeed: 2
-  moveCooldown: 2
+  _canTakeDamage: 1

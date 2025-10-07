@@ -24,7 +24,7 @@ public class PlayerController : MonoBehaviour, IDamageable
     [Header("Fight")]
     [SerializeField] private GameObject _arrowPrefab;
     [SerializeField] private Transform _attackPoint;
-    [SerializeField] private float _arrowSpeed = 5f;
+    [SerializeField] private float _arrowSpeed = 10f;
     [SerializeField] private float _attackCD = 0.5f;
     [SerializeField] private GameObject hpui;
     private bool shooted = false;
@@ -38,11 +38,10 @@ public class PlayerController : MonoBehaviour, IDamageable
     [SerializeField] private bool isDead = false;
 
     // 实现IDamageable接口的canTakeDamage属性
-    public bool canTakeDamage 
-    { 
+    public bool canTakeDamage
+    {
         get { return _canTakeDamage; }
     }
-
     void Awake()
     {
         sr = GetComponent<SpriteRenderer>();
@@ -77,9 +76,8 @@ public class PlayerController : MonoBehaviour, IDamageable
         }
 
         // jump
-        if (Input.GetKeyDown(KeyCode.W) && jumpCount > 0)
+        if (Input.GetKeyDown(KeyCode.W) && isGrounded)
         {
-            jumpCount--;
             rb.velocity = new Vector2(rb.velocity.x, jumpForce);
         }
 
@@ -93,7 +91,7 @@ public class PlayerController : MonoBehaviour, IDamageable
         
         if (!isGrounded)
         {
-            if(rb.velocity.y < 0) animator.SetBool("isFalling", true);
+            if(rb.velocity.y < -0.05f) animator.SetBool("isFalling", true);
             else animator.SetBool("isFalling", false);
         }
         
@@ -109,13 +107,13 @@ public class PlayerController : MonoBehaviour, IDamageable
             SpawnArrow();
             shooted = false;
         }
-        CommonTools.CheckScreenWrap(transform, rb);
+        CommonTools.CheckScreenWrap(transform, rb, !isDead);
         
         wasGrounded = isGrounded;
-        Vector2 rayOrigin1 = new Vector2(coll.bounds.min.x, coll.bounds.min.y);
-        Vector2 rayOrigin2 = new Vector2(coll.bounds.max.x, coll.bounds.min.y);
-        RaycastHit2D hit1 = Physics2D.Raycast(rayOrigin1, Vector2.down, 0.1f, groundLayer);
-        RaycastHit2D hit2 = Physics2D.Raycast(rayOrigin2, Vector2.down, 0.1f, groundLayer);
+        Vector2 rayOrigin1 = new Vector2(coll.bounds.min.x+0.1f, coll.bounds.min.y);
+        Vector2 rayOrigin2 = new Vector2(coll.bounds.max.x-0.1f, coll.bounds.min.y);
+        RaycastHit2D hit1 = Physics2D.Raycast(rayOrigin1, Vector2.down, 0.05f, groundLayer);
+        RaycastHit2D hit2 = Physics2D.Raycast(rayOrigin2, Vector2.down, 0.05f, groundLayer);
          
         isGrounded = hit1.collider != null || hit2.collider != null;
         isGrounded &= rb.IsTouchingLayers(groundLayer);
@@ -145,7 +143,7 @@ public class PlayerController : MonoBehaviour, IDamageable
     {
         if (isStriking)
         {
-            moveSpeed = baseMoveSpeed * 0.7f;
+            moveSpeed = baseMoveSpeed * 0.6f;
         }
         else
         {
@@ -164,21 +162,25 @@ public class PlayerController : MonoBehaviour, IDamageable
         }
     }
     
-    public void Strike()
+    public IEnumerator Strike()
     {
         Debug.Log("Player is striking");
         isStriking = true;
+        animator.SetTrigger("isStriking");
+        yield return new WaitForSeconds(3f);
+        isStriking = false;
         //TakeDamage(1);
     }
-
-    // 实现IDamageable接口的TakeDamage方法
-    public void TakeDamage(int damage)
+    public void TakeDamage(int damage, Vector2 knockbackDirection)
     {
         if (isDead) return;
-        if (_canTakeDamage)
-        {
+        Debug.Log(_canTakeDamage);
+        if (!_canTakeDamage) return;
+        else
+        {   
             Debug.Log("Player TakeDamage called with damage: " + damage);
             _canTakeDamage = false;
+            animator.SetTrigger("takeDamage");
             currentHp -= damage;
             hpui.GetComponent<HPUIManager>().SetHP(currentHp);
             Debug.Log("Player took " + damage + " damage. Health: " + currentHp + "/" + maxHp);
@@ -186,7 +188,13 @@ public class PlayerController : MonoBehaviour, IDamageable
             {
                 Die();
             }
-            CommonTools.TakeDamageEffect(gameObject, 3, 0.3f, this, () => _canTakeDamage = true);
+            else
+            {
+
+                CommonTools.TakeDamageEffect(gameObject, 3, 0.3f, this, () => _canTakeDamage = true);
+                rb.AddForce(knockbackDirection *0.5f+new Vector2(0,jumpForce*0.8f), ForceMode2D.Impulse);
+            }
+            AudioTool.PlaySound("takeDamage");
         }
     }
     
@@ -197,12 +205,30 @@ public class PlayerController : MonoBehaviour, IDamageable
         isDead = true;
         Debug.Log("Player died");
         
-        animator.SetTrigger("Die");
+        animator.SetTrigger("die");
+        DisablePlayerControls();
         
+        StartCoroutine(HandleDeathAnimationAndCleanup());
+    }
+    
+    private void DisablePlayerControls()
+    {
+        if (coll != null) coll.enabled = false;
         this.enabled = false;
-        if (GameManager.Instance != null)
+    }
+    
+    private IEnumerator HandleDeathAnimationAndCleanup()
+    {
+        yield return new WaitForSeconds(2f);
+
+        if (gameObject != null)
         {
-            GameManager.Instance.GameOver();
+            gameObject.SetActive(false);
+            
+            if (GameManager.Instance != null)
+            {
+                GameManager.Instance.GameOver();
+            }
         }
     }
     
@@ -214,5 +240,10 @@ public class PlayerController : MonoBehaviour, IDamageable
     public bool IsDead()
     {
         return isDead;
+    }
+    private IEnumerator DelayedDisable()
+    {
+        yield return new WaitForSeconds(2f);
+        this.enabled = false;
     }
 }

@@ -3,7 +3,9 @@
 --- !u!78 &1
 TagManager:
   serializedVersion: 2
-  tags: []
+  tags:
+  - Monster
+  - collection
   layers:
   - Default
   - TransparentFX
@@ -18,7 +20,7 @@ TagManager:
   - Building
   - 
   - Monster
-  - 
+  - Collection
   - Arrow
   - Player
   - 
@@ -55,6 +57,9 @@ TagManager:
     locked: 0
   - name: monsters
     uniqueID: 2157613043
+    locked: 0
+  - name: collection
+    uniqueID: 1966690213
     locked: 0
   - name: player
     uniqueID: 708193823

@@ -11,11 +11,11 @@ public class EventSystemManager : MonoBehaviour
         if (_instance == null)
         {
             _instance = this;
-            DontDestroyOnLoad(gameObject); // 确保该对象不被卸载
+            DontDestroyOnLoad(gameObject); 
         }
         else
         {
-            Destroy(gameObject); // 避免重复实例
+            Destroy(gameObject); 
         }
     }
 
@@ -40,12 +40,10 @@ public class EventSystemManager : MonoBehaviour
         {
             Debug.LogWarning("EventSystem not found in the current scene. Creating a new one...");
 
-            // 创建一个新的EventSystem对象
             GameObject eventSystemObj = new GameObject("EventSystem");
             eventSystemObj.AddComponent<EventSystem>();
             eventSystemObj.AddComponent<StandaloneInputModule>();
 
-            // 确保EventSystem对象不会被卸载
             DontDestroyOnLoad(eventSystemObj);
         }
     }

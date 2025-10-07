@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+/*
 public class ArrowController : MonoBehaviour
 {
     private SpriteRenderer sr;
@@ -101,3 +101,4 @@ public class ArrowController : MonoBehaviour
         }
     }
 }
+*/
